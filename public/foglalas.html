@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Időpont foglalás</title>
+    <link rel="stylesheet" href="fooldal.css">
+    <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+
+    <!-- Fejléc – csak jobb oldalt a kijelentkezés -->
+    <header class="top-header">
+        <div class="nav-right">
+            <a href="/logout" class="logout-button">Kijelentkezés</a>
+        </div>
+    </header>
+
+    <div class="figyelmeztetes">
+        <strong>Figyelem!</strong> A 24 órán belül lemondott időpont megtartott alkalomnak számít, amit kiszámlázunk.  
+        Az időpont lemondását az alábbi email címen lehet jelezni:  
+        <a href="mailto:magantanar@sze.hu">magantanar@sze.hu</a>
+    </div>
+
+    <!-- Foglalás űrlap -->
+    <div class="register-container">
+        <h2>Időpont foglalás</h2>
+        <form action="/foglalas" method="POST"> 
+            <label for="oktato">Oktató:</label>
+            <select name="oktato" id="oktato" required>
+                <option value="">-- Válassz oktatót --</option>
+                <option value="Horváth Gábor">Horváth Gábor</option>
+                <option value="Kovács Sándor">Kovács Sándor</option>
+            </select>
+
+            <label for="datum">Dátum:</label>
+            <input type="date" id="datum" name="datum" required readonly>
+
+            <label for="ido">Időpont:</label>
+            <select name="ido" id="ido" disabled required>
+                <option value="">-- Válassz időpontot --</option>
+            </select>
+
+            <label for="megjegyzes">Megjegyzés (opcionális):</label>
+            <input type="text" id="megjegyzes" name="megjegyzes" placeholder="Pl. fontos megjegyzés...">
+
+            <button type="submit">Foglalás</button>
+        </form>
+    </div>
+
+    <!-- Link a foglalásaimhoz -->
+    <div class="foglalas-link-container">
+        <p><strong>Eddig lefoglalt időpontok megtekintése:</strong></p>
+        <a href="/foglalasaim.html" class="foglalas-link-button">Foglalásaim megtekintése</a>
+    </div>
+
+    <script src="foglalas.js"></script>
+</body>
+</html>

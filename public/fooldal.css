@@ -1,0 +1,544 @@
+/* Alap stílusok */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+/* Fő navigáció */
+header {
+    background-color: #333;
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 24px;
+    align-items: center;
+}
+
+/* Bal oldali navigáció */
+.nav-left nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-left nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+.nav-left nav ul li a:hover {
+    color: #ccc;
+}
+
+/* Jobb oldali navigáció */
+.nav-right nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-right nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+.nav-right nav ul li a:hover {
+    color: #ccc;
+}
+
+/* Kezdőlap, Szolgáltatásaink, Áraink, Oktatók szekciók */
+.section {
+    padding: 50px;
+    margin-left: 100px; /* A navigáció sáv szélessége */
+}
+
+h1, h2 {
+    color: #333;
+}
+
+/* Lábléc stílusa */
+footer {
+    background-color: #333;
+    color: white;
+    padding: 20px 0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.phone {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.phone i {
+    font-size: 18px;
+}
+
+.ikon {
+    margin: 0;
+    font-size: 16px;
+}
+
+
+/* Egyéb stílusok */
+
+/* Navigációs fejléc (főoldali login/reg gombok) */
+header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+header nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+header nav ul li a:hover {
+    color: #ccc;
+}
+
+.container {
+    text-align: center;
+    padding: 50px;
+}
+
+/* Egységes konténer: bejelentkezés & regisztráció */
+.login-container, .register-container {
+    width: 350px;
+    margin: 40px auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 8px;
+}
+
+input {
+    margin-bottom: 16px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+button {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+p {
+    text-align: center;
+}
+
+/* „Vissza a főoldalra” gomb stílusa */
+.fooldal-button {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    display: block;
+    text-align: center;
+    width: fit-content;
+    margin: 20px auto 0 auto;
+    transition: background-color 0.2s ease;
+}
+
+.fooldal-button:hover {
+    background-color: #5a6268;
+}
+
+/* Foglalás űrlap: konténer (foglalas.html) */
+.register-container {
+    width: 350px;
+    margin-top: 40px;
+}
+
+/* Időpont input mezők */
+input[type="date"],
+input[type="time"],
+input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Visszajelző üzenet */
+form p {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* Sikeres foglalás */
+.success {
+    color: green;
+    background-color: #e7ffe7;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Sikertelen foglalás vagy hiba */
+.error {
+    color: red;
+    background-color: #ffe7e7;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Foglalásaim - lista stílus */
+.foglalas-container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.foglalas-container h1 {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.foglalas-kartya,
+.card {
+    background: #f0f4ff;
+    border-left: 5px solid #4a90e2;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.foglalas-kartya p,
+.card p {
+    margin: 5px 0;
+}
+
+.foglalas-links {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.foglalas-links a {
+    margin: 0 10px;
+    color: white;
+    background-color: #007bff;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    display: inline-block;
+    transition: background-color 0.2s ease;
+}
+
+.foglalas-links a:hover {
+    background-color: #0056b3;
+    text-decoration: underline;
+}
+
+.foglalas-link-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.foglalas-link-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.foglalas-link-button:hover {
+    background-color: #0056b3;
+}
+
+/* Fejléc foglalásos oldalakon – logout jobb felső sarokban */
+.top-header {
+    background-color: #333;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+.logout-button {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.logout-button:hover {
+    background-color: #c82333;
+}
+
+.figyelmeztetes {
+    background-color: #ffe6e6;
+    color: #a94442;
+    border: 1px solid #d9534f;
+    padding: 15px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* PROFIL BOX */
+.profile-box {
+    background-color: #fefefe;
+    border-left: 5px solid #4a90e2;
+    padding: 20px;
+    margin: 40px auto 20px auto;
+    border-radius: 8px;
+    max-width: 800px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    text-align: left;
+}
+
+.profile-box h2 {
+    margin-top: 0;
+}
+
+.profil-sor {
+    margin: 6px 0;
+    display: flex;
+    gap: 8px;
+}
+
+.profil-sor .cimke {
+    font-weight: bold;
+    min-width: 140px;
+}
+
+/* Áraink szekció */
+#araink {
+    background-color: #f9f9f9;
+    padding: 40px 20px;
+    margin: 20px auto;
+    max-width: 1100px;
+    text-align: center;
+}
+
+#araink h2 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+/* Ár lista */
+.price-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Egy ár blokk */
+.price-box {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 250px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.price-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.price-box h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #4CAF50;
+}
+
+.price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+}
+
+.duration {
+    font-size: 1.1rem;
+    color: #777;
+}
+
+.discount {
+    color: #E74C3C;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+.note {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 10px;
+}
+
+p {
+    margin-bottom: 10px;
+}
+
+#oktatoink {
+    padding: 50px;
+    text-align: center;
+}
+
+#oktatoink h2 {
+    color: #333;
+    font-size: 2em;
+    margin-bottom: 30px;
+}
+
+.instructors-container {
+    display: flex;
+    justify-content: space-around;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.instructor-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 350px;
+    text-align: center;
+    transition: transform 0.2s ease;
+    
+}
+
+.instructor-card:hover {
+    transform: scale(1.05);
+}
+
+.instructor-img {
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
+
+.instructor-card h3 {
+    font-size: 1.5em;
+    margin: 10px 0;
+    color: #333;
+}
+
+.instructor-card p {
+    font-size: 1em;
+    color: #666;
+    line-height: 1.6;
+}
+
+.instructor-card p {
+    text-align: left; /* Balra igazítja a szöveget */
+}
+
+
+#szolgaltatasaink {
+    background-color: #ffffff;
+    padding: 40px 20px;
+    margin: 40px auto;
+    max-width: 1000px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: left; /* Biztosítsuk a balra igazítást */
+}
+
+#szolgaltatasaink p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: left; /* Ha egy p elemet igazítani akarunk */
+}
+
+#szolgaltatasaink strong {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Listák stílusa */
+#szolgaltatasaink ul {
+    list-style-type: none;
+    padding: 0;
+    margin-left: 0; /* Biztosítsuk, hogy ne legyen indítási margó */
+}
+
+#szolgaltatasaink ul li {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 20px;
+}
+
+#szolgaltatasaink ul li::before {
+    content: "•";
+    color: #4CAF50; /* Zöld pipa a listában */
+    font-size: 1.5em;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
