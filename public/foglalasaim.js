@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const foglalasokDiv = document.getElementById("foglalasok");
 
-    // PROFIL BETÖLTÉS
+    
     const profilBox = document.createElement("div");
     profilBox.className = "profile-box";
     foglalasokDiv.parentNode.insertBefore(profilBox, foglalasokDiv);
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         profilBox.innerHTML = `<p class="error">${err.message}</p>`;
     }
 
-    // FOGLALÁSOK BETÖLTÉSE
+    
     try {
         const res = await fetch("/foglalasaim");
         if (!res.ok) throw new Error("Hiba a foglalások lekérésekor.");
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 }
 
-                // Foglalás kártya
+                
                 const card = document.createElement("div");
                 card.className = "card";
                 card.innerHTML = `

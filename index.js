@@ -6,7 +6,7 @@ const session = require("express-session");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
 
-// Middleware-ek: JSON és URL-encoded adatok feldolgozása
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,13 +32,13 @@ app.get("/foglalasaim.html", (req, res, next) => {
     next();
 });
 
-// Statikus fájlok kiszolgálása (HTML, CSS, JS)
+
 app.use(express.static(path.join(__dirname, "public")));
 
-// API útvonalak (regisztráció, bejelentkezés, foglalás)
+
 app.use("/", authRoutes);
 
-// Főoldal kiszolgálása
+
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "fooldal.html"));
 });

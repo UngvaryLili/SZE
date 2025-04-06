@@ -17,7 +17,7 @@ const dbConfig = {
     },
 };
 
-//  REGISZTRÁCIÓ
+
 router.post("/reg", async (req, res) => {
     const { email, username, password } = req.body;
 
@@ -48,7 +48,7 @@ router.post("/reg", async (req, res) => {
     }
 });
 
-//  BEJELENTKEZÉS
+
 router.post("/sign", async (req, res) => {
     const { email, password } = req.body;
 
@@ -77,7 +77,7 @@ router.post("/sign", async (req, res) => {
     }
 });
 
-//  KIJELENTKEZÉS
+
 router.get("/logout", (req, res) => {
     req.session.destroy(err => {
         if (err) {
@@ -117,7 +117,7 @@ router.post("/foglalas", async (req, res) => {
     }
 });
 
-//  FOGLALÁSOK LISTÁZÁSA
+
 router.get("/foglalasaim", async (req, res) => {
     const email = req.session.email;
 
@@ -138,7 +138,7 @@ router.get("/foglalasaim", async (req, res) => {
     }
 });
 
-//  PROFILADATOK LEKÉRÉSE
+
 router.get("/profiladatok", async (req, res) => {
     const email = req.session.email;
 

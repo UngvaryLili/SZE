@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
     });
 
-    // Csak akkor fusson le, ha tényleg dátumot választottak
+    
     datum.addEventListener("change", () => {
         if (datum.value === lastDatumValue) return;
         lastDatumValue = datum.value;
