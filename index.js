@@ -5,7 +5,7 @@ const session = require("express-session");
 
 const app = express();
 const authRoutes = require("./routes/authRoutes");
-
+const oktatokRoutes = require("./routes/oktatok"); // Új útvonal importálása
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,13 +32,16 @@ app.get("/foglalasaim.html", (req, res, next) => {
     next();
 });
 
-
+// Statikus fájlok kiszolgálása
 app.use(express.static(path.join(__dirname, "public")));
 
-
+// Auth útvonalak
 app.use("/", authRoutes);
 
+// Oktatókat lekérdező útvonal; így elérhető a http://localhost:5000/oktatok
+app.use("/oktatok", oktatokRoutes);
 
+// Kezdőoldal
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "fooldal.html"));
 });

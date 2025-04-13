@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const foglalasokDiv = document.getElementById("foglalasok");
 
-    
+    // Profil adatok megjelenítése
     const profilBox = document.createElement("div");
     profilBox.className = "profile-box";
     foglalasokDiv.parentNode.insertBefore(profilBox, foglalasokDiv);
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         profilBox.innerHTML = `<p class="error">${err.message}</p>`;
     }
 
-    
+    // Foglalások lekérése és megjelenítése
     try {
         const res = await fetch("/foglalasaim");
         if (!res.ok) throw new Error("Hiba a foglalások lekérésekor.");
@@ -35,7 +35,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             foglalasok.forEach(f => {
                 // Dátum formázása
                 const datum = new Date(f.datum);
-                const datumStr = `${datum.getFullYear()}.${(datum.getMonth() + 1).toString().padStart(2, '0')}.${datum.getDate().toString().padStart(2, '0')}`;
+                const datumStr = `${datum.getFullYear()}.${(datum.getMonth() + 1)
+                    .toString().padStart(2, '0')}.${datum.getDate().toString().padStart(2, '0')}`;
 
                 // Időpont formázása
                 let idoStr = "ismeretlen";
@@ -48,13 +49,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 }
 
-                
+                // Oktató név: ha undefined, akkor "Ismeretlen"
+                const oktatoNev = f.oktato || "Ismeretlen";
+
+                // Foglalás kártya létrehozása
                 const card = document.createElement("div");
                 card.className = "card";
                 card.innerHTML = `
                     <p><strong>Dátum:</strong> ${datumStr}</p>
                     <p><strong>Idő:</strong> ${idoStr}</p>
-                    <p><strong>Oktató:</strong> ${f.oktato}</p>
+                    <p><strong>Oktató:</strong> ${oktatoNev}</p>
                     <p><strong>Megjegyzés:</strong> ${f.megjegyzes || "Nincs"}</p>
                 `;
                 foglalasokDiv.appendChild(card);
