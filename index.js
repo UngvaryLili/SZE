@@ -13,11 +13,11 @@ app.use(express.urlencoded({ extended: true }));
 // Session kezelés
 app.use(session({
     secret: 'nagyontitkoskulcs', // titkos kulcs a session-höz
-    resave: false,
-    saveUninitialized: false
+    resave: false,    //akkor csak akkor kerül mentésre a session, ha ténylegesen módosítás történt
+    saveUninitialized: false  //ha valóban tartalmaz adatokat
 }));
 
-// Védelem: csak bejelentkezve lehessen elérni ezeket az oldalakat
+// csak bejelentkezve lehessen elérni ezeket az oldalakat
 app.get("/foglalas.html", (req, res, next) => {
     if (!req.session.email) {
         return res.redirect("/sign.html");

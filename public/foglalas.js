@@ -1,46 +1,48 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    // Elemszedések
     const oktatoSelect = document.getElementById("oktato");
     const datum = document.getElementById("datum");
     const ido = document.getElementById("ido");
     const megjegyzes = document.getElementById("megjegyzes");
     const submitBtn = document.querySelector("button");
+    const racs = document.getElementById("idopont-racs");
 
-    // Dinamikus oktató lista betöltése a szerver /oktatok végpontjáról
+    // Oktatók betöltése
     try {
         const response = await fetch("/oktatok");
         const teachers = await response.json();
-        // Töröljük az esetleges korábbi opciókat, majd feltöltjük a listát
         oktatoSelect.innerHTML = `<option value="">-- Válassz oktatót --</option>`;
         teachers.forEach(teacher => {
             const option = document.createElement("option");
-            option.value = teacher.oktatokId;    // például "2" vagy "3"
-            option.textContent = teacher.nev;     // pl.: "Horváth Gábor", "Kovács Sándor"
+            option.value = teacher.oktatokId;
+            option.textContent = teacher.nev;
             oktatoSelect.appendChild(option);
         });
     } catch (error) {
         console.error("Hiba az oktatók lekérésekor:", error);
     }
 
-    let lastDatumValue = "";
-
-    // Oktató kiválasztásának eseménye: ha van választás, engedélyezzük a többi mezőt és beállítjuk a dátum min/max értékét
     oktatoSelect.addEventListener("change", () => {
         const selected = oktatoSelect.value !== "";
+        datum.value = "";
+        ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
+        racs.innerHTML = "";
+
         if (selected) {
             datum.removeAttribute("readonly");
             ido.removeAttribute("disabled");
             megjegyzes.removeAttribute("readonly");
             submitBtn.removeAttribute("disabled");
 
-            // Minimum dátum: holnap (helyi idő alapján)
             const now = new Date();
-            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +1 nap
-            const yyyyMin = tomorrow.getFullYear();
-            const mmMin = String(tomorrow.getMonth() + 1).padStart(2, "0");
-            const ddMin = String(tomorrow.getDate()).padStart(2, "0");
+            let minDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+             // Ha a kiválasztott dátum a holnapi nap, akkor csak a 16:00-ig elérhető időpontokat engedélyezzük
+            if (now.getHours() >= 16) {
+                minDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+            }
+            const yyyyMin = minDate.getFullYear();
+            const mmMin = String(minDate.getMonth() + 1).padStart(2, "0");
+            const ddMin = String(minDate.getDate()).padStart(2, "0");
             datum.min = `${yyyyMin}-${mmMin}-${ddMin}`;
-            // Maximum dátum: fix érték, pl. 2025-06-27
             datum.max = "2025-06-27";
         } else {
             datum.setAttribute("readonly", true);
@@ -48,58 +50,188 @@ document.addEventListener("DOMContentLoaded", async () => {
             megjegyzes.setAttribute("readonly", true);
             submitBtn.setAttribute("disabled", true);
         }
-        datum.value = "";
-        ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
     });
 
-    // Amikor a dátum megváltozik, állítsuk be a lehetséges időpontokat az oktató és a nap alapján
-    datum.addEventListener("change", () => {
-        if (datum.value === lastDatumValue) return;
-        lastDatumValue = datum.value;
+    datum.addEventListener("change", async () => {
         if (!datum.value) return;
 
-        // Dátum darabolása
-        const [ev, ho, nap] = datum.value.split("-");
-        const selectedDate = new Date(Date.UTC(Number(ev), Number(ho) - 1, Number(nap)));
-        const day = selectedDate.getUTCDay(); // 0 = vasárnap, 6 = szombat
+        const selectedDate = new Date(datum.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
 
-        if (day === 0) {
-            alert("Vasárnapra nem lehet időpontot foglalni.");
+        if (selectedDate <= today) {
+            alert("Mai vagy múltbeli napra nem lehet időpontot foglalni.");
             datum.value = "";
             ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
+            racs.innerHTML = "";
             return;
         }
 
-        // Most a kiválasztott oktató ID-t használjuk
-        const selectedOktatoId = parseInt(oktatoSelect.value);
-        const idopontok = [];
-
-        // Feltételezzük, hogy:
-        // - "Horváth Gábor" oktatóId = 2
-        // - "Kovács Sándor" oktatóId = 3
-        if (selectedOktatoId === 2) {
-            if (day === 6) {
-                idopontok.push("09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00");
-            } else {
-                idopontok.push("16:00", "17:00", "18:00");
-            }
-        } else if (selectedOktatoId === 3) {
-            if (day === 6) {
-                idopontok.push("10:00", "11:00", "12:00", "13:00");
-            } else {
-                idopontok.push("14:00", "15:00", "16:00", "17:00");
-            }
-        } else {
-            // Ha más oktató lesz majd, ezt is lehet kezelni itt
-            idopontok.push("09:00", "10:00", "11:00", "12:00"); 
+        if (selectedDate.getDay() === 0) {
+            alert("Vasárnapra nem lehet időpontot foglalni.");
+            datum.value = "";
+            ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
+            racs.innerHTML = "";
+            return;
         }
 
-        ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
-        idopontok.forEach(t => {
-            const option = document.createElement("option");
-            option.value = t;
-            option.textContent = t;
-            ido.appendChild(option);
-        });
+        const selectedOktatoId = parseInt(oktatoSelect.value);
+        let idopontok = [];
+
+        if (selectedOktatoId === 2) {
+            idopontok = selectedDate.getDay() === 6
+                ? ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]
+                : ["16:00", "17:00", "18:00"];
+        } else if (selectedOktatoId === 3) {
+            idopontok = selectedDate.getDay() === 6
+                ? ["10:00", "11:00", "12:00", "13:00"]
+                : ["14:00", "15:00", "16:00", "17:00"];
+        } else {
+            idopontok = ["09:00", "10:00", "11:00", "12:00"];
+        }
+
+        try {
+            const foglaltRes = await fetch(`/foglalt-idopontok?oktatokId=${selectedOktatoId}&datum=${datum.value}`);
+            const foglaltRaw = await foglaltRes.json();
+
+            const foglaltIdopontok = foglaltRaw.map(idopont => {
+                const d = new Date(idopont);
+                return d.toISOString().substring(11, 16);
+            });
+
+            ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
+            racs.innerHTML = "";
+
+            idopontok.forEach(t => {
+                const option = document.createElement("option");
+                option.value = t;
+                option.textContent = t;
+                if (foglaltIdopontok.includes(t)) {
+                    option.disabled = true;
+                    option.textContent += " (foglalt)";
+                }
+                ido.appendChild(option);
+
+                const box = document.createElement("div");
+                box.classList.add("idopont");
+                box.textContent = t;
+                if (foglaltIdopontok.includes(t)) {
+                    box.classList.add("foglalt");
+                    box.title = "Ez az időpont már foglalt.";
+                } else {
+                    box.classList.add("szabad");
+                    box.title = "Ez az időpont szabad.";
+                }
+                racs.appendChild(box);
+            });
+        } catch (err) {
+            console.error("Nem sikerült lekérni a foglalt időpontokat:", err);
+        }
     });
+
+    const form = document.querySelector("form");
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const body = {};
+        for (let [key, value] of formData.entries()) {
+            body[key] = value;
+        }
+
+        try {
+            const res = await fetch("/foglalas", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else {
+                const text = await res.text();
+                alert(text);
+            }
+        } catch (err) {
+            alert("Hiba történt a foglalás során.");
+        }
+    });
+
+    // ================================
+    // FullCalendar Naptár Inicializálás
+    // ================================
+
+    function extractTime(isoTime) {
+        const date = new Date(isoTime);
+        const hours = date.getUTCHours().toString().padStart(2, "0");
+        const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+        return `${hours}:${minutes}`;
+    }
+
+    async function lekerFoglalasokNaptarhoz(userEmail) {
+        try {
+            const res = await fetch("/osszes-foglalas");
+            if (!res.ok) throw new Error("Nem sikerült foglalásokat lekérni.");
+            const foglalasok = await res.json();
+
+            return foglalasok.map(f => {
+                const ido = extractTime(f.ido);
+                const datum = f.datum.split("T")[0];
+                const start = `${datum}T${ido}`;
+                return {
+                    title: f.oktato || "Foglalás",
+                    start,
+                    end: start,
+                    color: f.email === userEmail ? "#007bff" : "#dc3545",
+                    sajat: f.email === userEmail
+                };
+            });
+        } catch (err) {
+            console.error("Naptár foglalás hiba:", err);
+            return [];
+        }
+    }
+
+    async function getUserEmail() {
+        try {
+            const res = await fetch("/profiladatok");
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.email;
+        } catch (err) {
+            console.error("Nem sikerült lekérni az email címet:", err);
+            return null;
+        }
+    }
+
+    async function initNaptar() {
+        const calendarEl = document.getElementById("naptar");
+        const userEmail = await getUserEmail();
+        const events = await lekerFoglalasokNaptarhoz(userEmail);
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'hu',
+            height: 420,
+            contentHeight: 400,
+            aspectRatio: 1.6,
+            allDaySlot: false,
+            slotMinTime: "09:00:00",
+            slotMaxTime: "19:00:00",
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: ''
+            },
+            events: events,
+            eventClick: function (info) {
+                const sajat = info.event.extendedProps.sajat;
+                alert(sajat ? "Ez a saját foglalásod!" : "Ez az időpont már foglalt.");
+            }
+        });
+
+        calendar.render();
+    }
+
+    await initNaptar();
 });

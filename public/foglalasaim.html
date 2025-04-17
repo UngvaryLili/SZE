@@ -7,13 +7,8 @@
   <link rel="stylesheet" href="fooldal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="icon" type="image/png" href="logo.png">
-
-  
-
 </head>
 <body>
-
-  
   <header class="top-header">
     <div class="nav-right">
       <a href="/logout" class="logout-button">Kijelentkezés</a>
@@ -23,14 +18,25 @@
   <div class="foglalas-container">
     <h1>Foglalásaim</h1>
     <div id="foglalasok">
+      <!-- Itt töltődnek be dinamikusan a foglalási kártyák a foglalasaim.js segítségével -->
       <p>Betöltés...</p>
     </div>
-
     <div class="foglalas-links">
       <a href="/foglalas.html">Új időpont foglalása</a>
-      
     </div>
   </div>
+
+  <!-- Reservation Card Template – ez a sablon mutatja, hogy milyen elemeket kell tartalmaznia 
+       a foglalási kártyáknak, és tartalmazza a "Lemondás" gombot. Ezt a JavaScript kód klónozhatja. -->
+  <template id="reservation-template">
+    <div class="card" data-id="">
+      <p><strong>Dátum:</strong> <span class="reservation-date"></span></p>
+      <p><strong>Idő:</strong> <span class="reservation-time"></span></p>
+      <p><strong>Oktató:</strong> <span class="reservation-teacher"></span></p>
+      <p><strong>Megjegyzés:</strong> <span class="reservation-note"></span></p>
+      <button class="cancel-btn" data-id="">Lemondás</button>
+    </div>
+  </template>
 
   <script src="foglalasaim.js"></script>
 </body>

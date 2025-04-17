@@ -189,9 +189,21 @@ p {
 
 /* Foglalás űrlap: (foglalas.html) */
 .register-container {
-    width: 350px;
-    margin-top: 40px;
+    flex: 1 1 40%;
+    min-width: 300px;
+    max-width: 400px;          /* << EZ FONTOS! */
+    background: #ffffff;
+    padding: 30px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;      /* hogy a form mezők ne szűküljenek */
+    margin: 0 auto;
 }
+
+
 
 /* Időpont input mezők */
 input[type="date"],
@@ -593,3 +605,117 @@ p {
     }
   }
   
+
+
+
+  .idopont-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.idopont {
+    padding: 10px;
+    text-align: center;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.idopont.szabad {
+    background-color: #d4edda;
+    border: 1px solid #28a745;
+    color: #155724;
+}
+
+.idopont.szabad:hover {
+    background-color: #c3e6cb;
+}
+
+.idopont.foglalt {
+    background-color: #f8d7da;
+    border: 1px solid #dc3545;
+    color: #721c24;
+    cursor: not-allowed;
+}
+
+.foglalas-flex-container {
+    
+
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;   /* középre! */
+    align-items: flex-start;
+    gap: 30px;
+    margin: 40px auto;
+    max-width: 1000px;
+    padding: 0 20px;
+
+    
+
+
+}
+
+#naptar-container {
+    width: 400px;  /* vagy pl. 800px */
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  
+  #naptar {
+    width: 100%;
+  }
+  
+
+/* Naptár méret beállítás – asztali nézetben kb. 320x320px 
+#naptar {
+    width: 100%;
+    max-width: 700px;
+    height: 420px;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+    */
+
+/* Mobilbarát nézet */
+@media (max-width: 768px) {
+    .foglalas-flex-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #naptar {
+        max-width: 95vw;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    #naptar-container {
+        margin-bottom: 20px;
+    }
+}
+
+
+/* FullCalendar: kisebb betűk, szűkebb naptár */
+.fc {
+    font-size: 13px;
+}
+
+.fc-toolbar-title {
+    font-size: 16px;
+}
+
+.fc .fc-daygrid-day-number {
+    font-weight: 600;
+}
+
+.fc .fc-button {
+    padding: 2px 6px;
+    font-size: 12px;
+}
