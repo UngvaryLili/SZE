@@ -123,7 +123,7 @@ router.post("/admin-reg", async (req, res) => {
         req.session.adminEmail = email;
 
         // Átirányítás az admin felületre
-        res.redirect("/admin-dashboard.html");
+        res.redirect("/adminOldal.html");
     } catch (err) {
         console.error("Admin regisztrációs hiba:", err);
         res.status(500).send("Szerverhiba.");
@@ -159,12 +159,119 @@ router.post("/admin-sign", async (req, res) => {
         req.session.adminEmail = email;
 
         // Átirányítás az admin felületre
-        res.redirect("/admin-dashboard.html");
+        res.redirect("/adminOldal.html");
     } catch (err) {
         console.error("Admin bejelentkezési hiba:", err);
         res.status(500).send("Szerverhiba.");
     }
 });
+
+// ========== ADMIN FOGLALÁSOK LEKÉRÉSE ==========
+router.get("/admin-foglalasok", async (req, res) => {
+    const email = req.session.adminEmail;
+    if (!email) return res.status(403).send("Nem vagy bejelentkezve adminként.");
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        // Lekérjük az oktatokId-t az email alapján
+        const oktatoResult = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT oktatokId FROM oktatok WHERE email = @email");
+
+        if (oktatoResult.recordset.length === 0) {
+            return res.status(400).send("Oktató nem található.");
+        }
+
+        const oktatokId = oktatoResult.recordset[0].oktatokId;
+
+        // Összes hozzá tartozó foglalás lekérdezése
+        const result = await pool.request()
+            .input("oktatokId", sql.Int, oktatokId)
+            .query(`
+                SELECT esemenyId, datum, ido, email, megjegyzes
+                FROM esemeny
+                WHERE oktatokId = @oktatokId
+                ORDER BY datum ASC, ido ASC
+            `);
+
+        res.json(result.recordset);
+    } catch (err) {
+        console.error("Admin foglalások lekérési hiba:", err);
+        res.status(500).send("Szerverhiba.");
+    }
+});
+
+// ========== ADMIN IDŐPONT TÖRLÉS ==========
+router.post("/admin-delete", async (req, res) => {
+    const email = req.session.adminEmail;
+    const { esemenyId } = req.body;
+
+    if (!email) return res.status(403).send("Nem vagy bejelentkezve adminként.");
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        // Lekérjük az eseményt
+        const result = await pool.request()
+            .input("esemenyId", sql.Int, parseInt(esemenyId))
+            .query("SELECT datum, ido FROM esemeny WHERE esemenyId = @esemenyId");
+
+        const esemeny = result.recordset[0];
+        if (!esemeny) return res.status(400).send("Esemény nem található.");
+
+        const datum = new Date(esemeny.datum);
+        const ido = esemeny.ido;
+
+        // Idő szétbontása (óra + perc)
+        let ora = 0;
+        let perc = 0;
+
+        if (ido instanceof Date) {
+            ora = ido.getHours();
+            perc = ido.getMinutes();
+        } else if (typeof ido === "string") {
+            const parts = ido.split(":");
+            ora = parseInt(parts[0]);
+            perc = parseInt(parts[1]);
+        } else {
+            throw new Error("Ismeretlen időformátum az 'ido' mezőnél.");
+        }
+
+        // Pontos esemény időpont összeállítása
+        const esemenyIdopont = new Date(
+            datum.getFullYear(),
+            datum.getMonth(),
+            datum.getDate(),
+            ora,
+            perc
+        );
+
+        const most = new Date();
+
+        // Csak jövőbeli időpontot engedünk törölni
+        if (esemenyIdopont <= most) {
+            return res.status(403).send("Csak jövőbeli időpontot lehet törölni.");
+        }
+
+        // Törlés végrehajtása
+        await pool.request()
+            .input("esemenyId", sql.Int, parseInt(esemenyId))
+            .query("DELETE FROM esemeny WHERE esemenyId = @esemenyId");
+
+        res.send("Időpont sikeresen törölve.");
+    } catch (err) {
+        console.error("Admin törlés hiba:", err);
+        res.status(500).send("Szerverhiba.");
+    }
+});
+
+
+
+
+
+
+
 
 
 
@@ -176,7 +283,7 @@ router.get("/logout", (req, res) => {
     });
 });
 
-// ============== FOGLALÁS ==============
+// ============== T.FOGLALÁS ==============
 router.post("/foglalas", async (req, res) => {
     const email = req.session.email;
     const { oktatokId, datum, ido, megjegyzes } = req.body;
@@ -212,7 +319,7 @@ router.post("/foglalas", async (req, res) => {
     }
 });
 
-// ============== LEMONDÁS ==============
+// ==============t. LEMONDÁS ==============
 router.post("/cancel", async (req, res) => {
     const { esemenyId } = req.body;
     const email = req.session.email;
@@ -249,7 +356,7 @@ router.post("/cancel", async (req, res) => {
     }
 });
 
-// ============== FOGLALÁSAIM ==============
+// ============== t. FOGLALÁSAIM ==============
 router.get("/foglalasaim", async (req, res) => {
     const email = req.session.email;
     if (!email) return res.status(403).send("Nem vagy bejelentkezve.");
@@ -280,7 +387,7 @@ router.get("/foglalasaim", async (req, res) => {
 });
 
 
-// ================= PROFILADATOK =================
+// ================= t. PROFILADATOK =================
 router.get("/profiladatok", async (req, res) => {
     const email = req.session.email;
     if (!email) return res.status(403).send("Nem vagy bejelentkezve.");
@@ -298,7 +405,7 @@ router.get("/profiladatok", async (req, res) => {
     }
 });
 
-// ================= Foglalt időpontok oktató + dátum alapján =================
+// =================naptar Foglalt időpontok oktató + dátum alapján =================
 router.get("/foglalt-idopontok", async (req, res) => {
     const { oktatokId, datum } = req.query;
     try {
@@ -338,3 +445,5 @@ router.get("/osszes-foglalas", async (req, res) => {
 });
 
 module.exports = router;
+
+

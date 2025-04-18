@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Foglalások</title>
+  <link rel="stylesheet" href="fooldal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <header class="top-header">
+    <div class="nav-right">
+      <a href="/logout" class="logout-button">Kijelentkezés</a>
+    </div>
+  </header>
+
+  <div class="foglalas-container">
+    <h1>Hozzád tartozó foglalások</h1>
+    <div id="admin-foglalasok">
+      <p>Betöltés...</p>
+    </div>
+  </div>
+
+  <!-- Foglalás kártya sablon -->
+  <template id="admin-foglalas-template">
+    <div class="card" data-id="">
+      <p><strong>Dátum:</strong> <span class="datum"></span></p>
+      <p><strong>Idő:</strong> <span class="ido"></span></p>
+      <p><strong>Tanuló email:</strong> <span class="email"></span></p>
+      <p><strong>Megjegyzés:</strong> <span class="megjegyzes"></span></p>
+      <button class="cancel-btn" data-id="">Törlés</button>
+    </div>
+  </template>
+
+  <script src="adminOldal.js"></script>
+</body>
+</html>
