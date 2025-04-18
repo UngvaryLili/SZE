@@ -267,6 +267,166 @@ router.post("/admin-delete", async (req, res) => {
 });
 
 
+// ========== ADMIN ÚJ ELÉRHETŐ IDŐPONT HOZZÁADÁSA ==========
+router.post("/admin-elerheto-idopont", async (req, res) => {
+    const email = req.session.adminEmail;
+    const { datum, ido, megjegyzes } = req.body;
+
+    if (!email) return res.status(403).send("Nem vagy bejelentkezve adminként.");
+    if (!datum || !ido) return res.status(400).send("A dátum és az időpont megadása kötelező.");
+
+    // ====== DÁTUMELLENŐRZÉS ======
+    const selectedDate = new Date(datum);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const maxDatum = new Date("2025-06-27");
+
+    if (selectedDate <= today) {
+        return res.status(400).send("Mai vagy múltbeli napra nem lehet időpontot beállítani.");
+    }
+
+    if (selectedDate > maxDatum) {
+        return res.status(400).send("2025.06.27. utánra nem lehet időpontot beállítani.");
+    }
+
+    if (selectedDate.getDay() === 0) {
+        return res.status(400).send("Vasárnapra nem lehet időpontot beállítani.");
+    }
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        // Oktató ID lekérdezése e-mail alapján
+        const result = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT oktatokId FROM oktatok WHERE email = @email");
+
+        if (result.recordset.length === 0) {
+            return res.status(400).send("Oktató nem található.");
+        }
+
+        const oktatokId = result.recordset[0].oktatokId;
+
+        // ====== IDŐ KONVERTÁLÁSA stringgé: "09:00:00" formátumban ======
+        const [ora, perc] = ido.split(":").map(Number);
+        const idoStr = `${ora.toString().padStart(2, "0")}:${perc.toString().padStart(2, "0")}:00`;
+
+        // ====== BESZÚRÁS ======
+        await pool.request()
+            .input("oktatokId", sql.TinyInt, oktatokId)
+            .input("datum", sql.Date, datum)
+            .input("ido", sql.VarChar, idoStr) // szövegként küldjük időzóna nélkül
+            .input("megjegyzes", sql.NVarChar, megjegyzes || "")
+            .query(`
+                INSERT INTO ElérhetőIdopontok (oktatokId, datum, ido, megjegyzes)
+                VALUES (@oktatokId, @datum, @ido, @megjegyzes)
+            `);
+
+        res.send("Elérhető időpont sikeresen hozzáadva.");
+    } catch (err) {
+        console.error("Elérhető időpont hozzáadási hiba:", err);
+        res.status(500).send("Szerverhiba.");
+    }
+});
+
+// ========== DUPLIKÁLT IDŐPONT ELLENŐRZÉS ==========
+router.get("/admin-ellenorzes", async (req, res) => {
+    const email = req.session.adminEmail;
+    const { datum, ido } = req.query;
+
+    if (!email) return res.status(403).json({ marVan: false });
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        const oktatoRes = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT oktatokId FROM oktatok WHERE email = @email");
+
+        if (oktatoRes.recordset.length === 0)
+            return res.status(400).json({ marVan: false });
+
+        const oktatokId = oktatoRes.recordset[0].oktatokId;
+
+        const [ora, perc] = ido.split(":").map(Number);
+        const idoStr = `${ora.toString().padStart(2, "0")}:${perc.toString().padStart(2, "0")}:00`;
+
+        const result = await pool.request()
+            .input("oktatokId", sql.TinyInt, oktatokId)
+            .input("datum", sql.Date, datum)
+            .input("ido", sql.VarChar, idoStr)
+            .query("SELECT * FROM ElérhetőIdopontok WHERE oktatokId = @oktatokId AND datum = @datum AND ido = @ido");
+
+        if (result.recordset.length > 0) {
+            return res.json({ marVan: true });
+        } else {
+            return res.json({ marVan: false });
+        }
+    } catch (err) {
+        console.error("Időpont ellenőrzési hiba:", err);
+        res.status(500).json({ marVan: false });
+    }
+});
+
+
+//naptár admin oldal
+
+// ======== ADMIN NAPTÁR: Saját kiírt időpontok lekérdezése ========
+// ========== ADMIN KIÍRT IDŐPONTOK – NAPTÁR MEGJELENÍTÉS ==========
+
+router.get("/admin-kiratasaim", async (req, res) => {
+    const email = req.session.adminEmail;
+    if (!email) return res.status(403).json([]);
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        const oktatoRes = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT oktatokId FROM oktatok WHERE email = @email");
+
+        if (oktatoRes.recordset.length === 0) {
+            return res.status(400).json([]);
+        }
+
+        const oktatokId = oktatoRes.recordset[0].oktatokId;
+
+        const result = await pool.request()
+            .input("oktatokId", sql.TinyInt, oktatokId)
+            .query("SELECT datum, ido, megjegyzes FROM ElérhetőIdopontok WHERE oktatokId = @oktatokId");
+
+        const events = result.recordset.map(row => {
+            let ora = 0;
+            let perc = 0;
+
+            if (row.ido instanceof Date) {
+                ora = row.ido.getHours();
+                perc = row.ido.getMinutes();
+            } else if (typeof row.ido === "string" && row.ido.includes(":")) {
+                const [h, m] = row.ido.split(":");
+                ora = parseInt(h, 10);
+                perc = parseInt(m, 10);
+            }
+
+            const startDate = new Date(row.datum);
+            startDate.setHours(ora, perc, 0, 0);
+
+            return {
+                title: row.megjegyzes || "Kiírt óra",
+                start: startDate.toISOString(),
+                end: new Date(startDate.getTime() + 60 * 60 * 1000).toISOString(),
+                color: "#008000"
+            };
+        });
+
+        res.json(events);
+    } catch (err) {
+        console.error("Kiírt időpontok lekérése (admin):", err);
+        res.status(500).json([]);
+    }
+});
+
 
 
 

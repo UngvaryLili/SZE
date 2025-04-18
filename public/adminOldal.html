@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="fooldal.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="icon" type="image/png" href="logo.png">
+
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 </head>
 <body>
   <header class="top-header">
@@ -16,7 +19,41 @@
   </header>
 
   <div class="foglalas-container">
-    <h1>Hozzád tartozó foglalások</h1>
+    <!-- Új elérhető időpont hozzáadása -->
+    <div class="uj-idopont-form">
+      <h2>Új elérhető időpont hozzáadása</h2>
+      <form id="elerheto-idopont-form">
+        <label for="uj-datum">Dátum:</label>
+        <input type="date" id="uj-datum" name="datum" required>
+
+        <label for="uj-ido">Időpont:</label>
+        <select id="uj-ido" name="ido" required>
+          <option value="">-- Válassz időpontot --</option>
+          <option value="09:00">09:00</option>
+          <option value="10:00">10:00</option>
+          <option value="11:00">11:00</option>
+          <option value="12:00">12:00</option>
+          <option value="13:00">13:00</option>
+          <option value="14:00">14:00</option>
+          <option value="15:00">15:00</option>
+          <option value="16:00">16:00</option>
+          <option value="17:00">17:00</option>
+          <option value="18:00">18:00</option>
+        </select>
+
+        <label for="uj-megjegyzes">Megjegyzés (nem kötelező):</label>
+        <input type="text" id="uj-megjegyzes" name="megjegyzes" placeholder="pl. online, terem, stb.">
+
+        <button type="submit">Hozzáadás</button>
+      </form>
+    </div>
+
+    <!-- Naptárnézet (FullCalendar) -->
+    <h2>Saját kiírt időpontjaid – heti naptárnézet</h2>
+    <div id="naptar"></div>
+
+    <!-- Foglaláslista -->
+    <h2>Hozzád tartozó foglalások</h2>
     <div id="admin-foglalasok">
       <p>Betöltés...</p>
     </div>
@@ -33,6 +70,8 @@
     </div>
   </template>
 
+  <!-- FullCalendar script -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script src="adminOldal.js"></script>
 </body>
 </html>
