@@ -47,7 +47,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // DUPLIKÁLT IDŐPONT ELLENŐRZÉS
         try {
             const ellenorzesRes = await fetch(`/admin-ellenorzes?datum=${datum}&ido=${ido}`);
             const exists = await ellenorzesRes.json();
@@ -60,7 +59,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // BEKÜLDÉS
         try {
             const res = await fetch("/admin-elerheto-idopont", {
                 method: "POST",
@@ -72,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (res.ok) {
                 alert("Időpont sikeresen hozzáadva.");
                 elerhetoForm.reset();
-                location.reload(); // frissítés a naptárhoz is
+                location.reload();
             } else {
                 alert("Hiba: " + message);
             }
@@ -122,7 +120,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         foglalasokDiv.innerHTML = `<p class="error">${err.message}</p>`;
     }
 
-    // ======= TÖRLÉS KEZELÉSE =======
     foglalasokDiv.addEventListener("click", async (e) => {
         if (e.target && e.target.classList.contains("cancel-btn")) {
             const esemenyId = e.target.getAttribute("data-id");
@@ -157,7 +154,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         allDaySlot: false,
         height: "auto",
         locale: "hu",
-        timeZone: "local", //időzóna eltolás az admin naptárnál
         headerToolbar: {
             left: "prev,next today",
             center: "title",
@@ -167,19 +163,39 @@ document.addEventListener("DOMContentLoaded", async () => {
             try {
                 const res = await fetch("/admin-kiratasaim");
                 const idopontok = await res.json();
-
-                const esemenyek = idopontok.map(i => ({
-                    title: i.title || "Kiírt óra",
-                    start: i.start,
-                    end: i.end,
-                    allDay: false,
-                    color: "#008000"
-                }));
-
-                successCallback(esemenyek);
+                successCallback(idopontok);
             } catch (err) {
                 console.error("Hiba a kiírt órák betöltésekor:", err);
                 failureCallback(err);
+            }
+        },
+        eventClick: async function (info) {
+            const foglalt = info.event.extendedProps.foglalt;
+            const datum = info.event.extendedProps.datum;
+            const ido = info.event.extendedProps.ido;
+
+            if (foglalt) {
+                alert("Erre az időpontra már történt foglalás, előbb azt töröld a kártyás listából!");
+                return;
+            }
+
+            if (confirm(`Biztosan törölni szeretnéd ezt az időpontot? (${datum} ${ido})`)) {
+                try {
+                    const res = await fetch("/admin-idopont-torles", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ datum, ido })
+                    });
+                    const message = await res.text();
+                    if (res.ok) {
+                        alert("Időpont törölve.");
+                        info.event.remove();
+                    } else {
+                        alert(message);
+                    }
+                } catch (err) {
+                    alert("Hiba történt a törlés során.");
+                }
             }
         }
     });

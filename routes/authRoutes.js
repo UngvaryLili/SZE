@@ -393,10 +393,26 @@ router.get("/admin-kiratasaim", async (req, res) => {
 
         const result = await pool.request()
             .input("oktatokId", sql.TinyInt, oktatokId)
-            .query("SELECT datum, CAST(ido AS varchar) AS ido, megjegyzes FROM ElérhetőIdopontok WHERE oktatokId = @oktatokId");
+            .query(`
+                SELECT 
+                    ki.datum, 
+                    CAST(ki.ido AS varchar) AS ido, 
+                    ki.megjegyzes,
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 FROM esemeny e
+                            WHERE e.oktatokId = ki.oktatokId 
+                              AND e.datum = ki.datum 
+                              AND e.ido = ki.ido
+                        ) 
+                        THEN 1 ELSE 0 
+                    END AS foglalt
+                FROM ElérhetőIdopontok ki
+                WHERE ki.oktatokId = @oktatokId
+            `);
 
         const events = result.recordset.map(row => {
-            const datum = row.datum.toISOString().split("T")[0]; // YYYY-MM-DD
+            const datum = row.datum.toISOString().split("T")[0];
             const [ora, perc] = row.ido.split(":");
 
             const start = `${datum}T${ora}:${perc}:00`;
@@ -407,7 +423,12 @@ router.get("/admin-kiratasaim", async (req, res) => {
                 title: row.megjegyzes || "Elérhető",
                 start,
                 end,
-                color: "#008000"
+                color: row.foglalt ? "#ffc107" : "#28a745", // narancs: foglalt, zöld: szabad
+                extendedProps: {
+                    foglalt: row.foglalt === 1,
+                    datum,
+                    ido: `${ora}:${perc}`
+                }
             };
         });
 
@@ -417,6 +438,80 @@ router.get("/admin-kiratasaim", async (req, res) => {
         res.status(500).json([]);
     }
 });
+
+
+
+router.get("/admin-ellenorzes-foglalas", async (req, res) => {
+    const email = req.session.adminEmail;
+    const { datum, ido } = req.query;
+    if (!email) return res.status(403).json({ vanFoglalas: false });
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        const oktatoRes = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT oktatokId FROM oktatok WHERE email = @email");
+
+        if (oktatoRes.recordset.length === 0)
+            return res.status(400).json({ vanFoglalas: false });
+
+        const oktatokId = oktatoRes.recordset[0].oktatokId;
+
+        const result = await pool.request()
+            .input("oktatokId", sql.Int, oktatokId)
+            .input("datum", sql.Date, datum)
+            .input("ido", sql.VarChar, ido + ":00") // "15:00" -> "15:00:00"
+            .query("SELECT COUNT(*) AS count FROM esemeny WHERE oktatokId = @oktatokId AND datum = @datum AND ido = @ido");
+
+        const vanFoglalas = result.recordset[0].count > 0;
+        res.json({ vanFoglalas });
+    } catch (err) {
+        console.error("Foglalás ellenőrzés hiba:", err);
+        res.status(500).json({ vanFoglalas: false });
+    }
+});
+
+
+router.post("/admin-idopont-torles", async (req, res) => {
+    const email = req.session.adminEmail;
+    const { datum, ido } = req.body;
+    if (!email) return res.status(403).send("Nem vagy bejelentkezve.");
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        const oktatoRes = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT oktatokId FROM oktatok WHERE email = @email");
+
+        if (oktatoRes.recordset.length === 0)
+            return res.status(400).send("Oktató nem található.");
+
+        const oktatokId = oktatoRes.recordset[0].oktatokId;
+
+        await pool.request()
+            .input("oktatokId", sql.Int, oktatokId)
+            .input("datum", sql.Date, datum)
+            .input("ido", sql.VarChar, ido + ":00")
+            .query("DELETE FROM ElérhetőIdopontok WHERE oktatokId = @oktatokId AND datum = @datum AND ido = @ido");
+
+        res.send("Időpont törölve.");
+    } catch (err) {
+        console.error("Időpont törlés hiba:", err);
+        res.status(500).send("Szerverhiba.");
+    }
+});
+
+
+
+
+
+
+
+
+
+
 
 
 
