@@ -83,10 +83,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const foglaltRes = await fetch(`/foglalt-idopontok?oktatokId=${selectedOktatoId}&datum=${datum.value}`);
             const foglaltRaw = await foglaltRes.json();
+
+
             const foglaltIdopontok = foglaltRaw.map(idopont => {
                 const d = new Date(idopont);
                 return d.toISOString().substring(11, 16);
             });
+           
+
+            
 
             ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
             racs.innerHTML = "";
@@ -146,11 +151,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    function extractTime(isoTime) {
-        const date = new Date(isoTime);
-        const hours = date.getUTCHours().toString().padStart(2, "0");
-        const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-        return `${hours}:${minutes}`;
+    function extractTime(ido) {
+        if (typeof ido === "string") {
+            return ido.slice(0, 5);
+        } else if (typeof ido === "object" && ido !== null) {
+            const hours = ido.hours?.toString().padStart(2, "0") || "00";
+            const minutes = ido.minutes?.toString().padStart(2, "0") || "00";
+            return `${hours}:${minutes}`;
+        }
+        return "00:00";
     }
 
     async function lekerFoglalasokNaptarhoz(userEmail) {
@@ -160,9 +169,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             const foglalasok = await res.json();
 
             return foglalasok.map(f => {
-                const idoStr = typeof f.ido === "string" ? f.ido : "00:00:00";
-                const datum = f.datum.split("T")[0]; // csak "YYYY-MM-DD"
-                const start = `${datum}T${idoStr.slice(0,5)}:00`; // pl. 2025-04-26T09:00:00
+                /*const datumObj = new Date(f.datum); //nem jó a dátum, mert időzóna eltolás, stringé alakítjuk
+                const ido = extractTime(f.ido);
+
+                const start = `${datumObj.getFullYear()}-${(datumObj.getMonth() + 1).toString().padStart(2, "0")}-${datumObj.getDate().toString().padStart(2, "0")}T${ido}:00`;
+                */
+                const datum = f.datum.split("T")[0]; // pl. "2025-04-23"
+                const ido = f.ido.split("T")[1].substring(0, 5); // pl. "15:00"
+                const start = `${datum}T${ido}:00`;
+                
+
+
+
+
+
                 return {
                     title: f.oktato || "Foglalás",
                     start,
