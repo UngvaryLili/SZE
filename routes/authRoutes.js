@@ -559,6 +559,7 @@ router.get("/profiladatok", async (req, res) => {
 
 
 // ========== !!!ELÉRHETŐ IDŐPONTOK LEKÉRÉSE (tanulói foglaláshoz) ==========
+// ========== !!!ELÉRHETŐ IDŐPONTOK LEKÉRÉSE (tanulói foglaláshoz) ==========
 router.get("/elerheto-idopontok", async (req, res) => {
     const { oktatokId, datum } = req.query;
 
@@ -573,22 +574,15 @@ router.get("/elerheto-idopontok", async (req, res) => {
             .input("oktatokId", sql.TinyInt, parseInt(oktatokId))
             .input("datum", sql.Date, datum)
             .query(`
-                SELECT ido 
+                SELECT CAST(ido AS varchar) AS ido 
                 FROM ElérhetőIdopontok 
                 WHERE oktatokId = @oktatokId AND datum = @datum
                 ORDER BY ido ASC
             `);
 
-        // Átalakítás: pl. "09:00:00" vagy Date -> "09:00"
         const idopontok = result.recordset.map(r => {
-            if (r.ido instanceof Date) {
-                return r.ido.toTimeString().slice(0, 5); // HH:MM
-            } else if (typeof r.ido === "string") {
-                return r.ido.split(":").slice(0, 2).join(":");
-            } else {
-                return null;
-            }
-        }).filter(i => i !== null);
+            return r.ido.split(":").slice(0, 2).join(":");
+        });
 
         res.json(idopontok);
     } catch (err) {
