@@ -381,7 +381,6 @@ router.get("/admin-kiratasaim", async (req, res) => {
 
     try {
         const pool = await sql.connect(dbConfig);
-
         const oktatoRes = await pool.request()
             .input("email", sql.NVarChar, email)
             .query("SELECT oktatokId FROM oktatok WHERE email = @email");
@@ -394,28 +393,20 @@ router.get("/admin-kiratasaim", async (req, res) => {
 
         const result = await pool.request()
             .input("oktatokId", sql.TinyInt, oktatokId)
-            .query("SELECT datum, ido, megjegyzes FROM ElérhetőIdopontok WHERE oktatokId = @oktatokId");
+            .query("SELECT datum, CAST(ido AS varchar) AS ido, megjegyzes FROM ElérhetőIdopontok WHERE oktatokId = @oktatokId");
 
         const events = result.recordset.map(row => {
-            let ora = 0;
-            let perc = 0;
+            const datum = row.datum.toISOString().split("T")[0]; // YYYY-MM-DD
+            const [ora, perc] = row.ido.split(":");
 
-            if (row.ido instanceof Date) {
-                ora = row.ido.getHours();
-                perc = row.ido.getMinutes();
-            } else if (typeof row.ido === "string" && row.ido.includes(":")) {
-                const [h, m] = row.ido.split(":");
-                ora = parseInt(h, 10);
-                perc = parseInt(m, 10);
-            }
-
-            const startDate = new Date(row.datum);
-            startDate.setHours(ora, perc, 0, 0);
+            const start = `${datum}T${ora}:${perc}:00`;
+            const endOra = String(parseInt(ora) + 1).padStart(2, "0");
+            const end = `${datum}T${endOra}:${perc}:00`;
 
             return {
-                title: row.megjegyzes || "Kiírt óra",
-                start: startDate.toISOString(),
-                end: new Date(startDate.getTime() + 60 * 60 * 1000).toISOString(),
+                title: row.megjegyzes || "Elérhető",
+                start,
+                end,
                 color: "#008000"
             };
         });
@@ -565,6 +556,67 @@ router.get("/profiladatok", async (req, res) => {
     }
 });
 
+
+
+// ========== !!!ELÉRHETŐ IDŐPONTOK LEKÉRÉSE (tanulói foglaláshoz) ==========
+router.get("/elerheto-idopontok", async (req, res) => {
+    const { oktatokId, datum } = req.query;
+
+    if (!oktatokId || !datum) {
+        return res.status(400).send("Hiányzó paraméterek.");
+    }
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        const result = await pool.request()
+            .input("oktatokId", sql.TinyInt, parseInt(oktatokId))
+            .input("datum", sql.Date, datum)
+            .query(`
+                SELECT ido 
+                FROM ElérhetőIdopontok 
+                WHERE oktatokId = @oktatokId AND datum = @datum
+                ORDER BY ido ASC
+            `);
+
+        // Átalakítás: pl. "09:00:00" vagy Date -> "09:00"
+        const idopontok = result.recordset.map(r => {
+            if (r.ido instanceof Date) {
+                return r.ido.toTimeString().slice(0, 5); // HH:MM
+            } else if (typeof r.ido === "string") {
+                return r.ido.split(":").slice(0, 2).join(":");
+            } else {
+                return null;
+            }
+        }).filter(i => i !== null);
+
+        res.json(idopontok);
+    } catch (err) {
+        console.error("Elérhető időpontok lekérése hiba:", err);
+        res.status(500).send("Szerverhiba.");
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // =================naptar Foglalt időpontok oktató + dátum alapján =================
 router.get("/foglalt-idopontok", async (req, res) => {
     const { oktatokId, datum } = req.query;
@@ -605,5 +657,7 @@ router.get("/osszes-foglalas", async (req, res) => {
 });
 
 module.exports = router;
+
+
 
 

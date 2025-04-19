@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const now = new Date();
             let minDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-             // Ha a kiválasztott dátum a holnapi nap, akkor csak a 16:00-ig elérhető időpontokat engedélyezzük
             if (now.getHours() >= 16) {
                 minDate = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
             }
@@ -77,24 +76,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const selectedOktatoId = parseInt(oktatoSelect.value);
-        let idopontok = [];
-
-        if (selectedOktatoId === 2) {
-            idopontok = selectedDate.getDay() === 6
-                ? ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]
-                : ["16:00", "17:00", "18:00"];
-        } else if (selectedOktatoId === 3) {
-            idopontok = selectedDate.getDay() === 6
-                ? ["10:00", "11:00", "12:00", "13:00"]
-                : ["14:00", "15:00", "16:00", "17:00"];
-        } else {
-            idopontok = ["09:00", "10:00", "11:00", "12:00"];
-        }
 
         try {
+            const elerhetoRes = await fetch(`/elerheto-idopontok?oktatokId=${selectedOktatoId}&datum=${datum.value}`);
+            const elerhetoIdopontok = await elerhetoRes.json();
+
             const foglaltRes = await fetch(`/foglalt-idopontok?oktatokId=${selectedOktatoId}&datum=${datum.value}`);
             const foglaltRaw = await foglaltRes.json();
-
             const foglaltIdopontok = foglaltRaw.map(idopont => {
                 const d = new Date(idopont);
                 return d.toISOString().substring(11, 16);
@@ -103,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
             racs.innerHTML = "";
 
-            idopontok.forEach(t => {
+            elerhetoIdopontok.forEach(t => {
                 const option = document.createElement("option");
                 option.value = t;
                 option.textContent = t;
@@ -125,8 +113,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 racs.appendChild(box);
             });
+
         } catch (err) {
-            console.error("Nem sikerült lekérni a foglalt időpontokat:", err);
+            console.error("Nem sikerült lekérni az időpontokat:", err);
         }
     });
 
@@ -157,10 +146,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // ================================
-    // FullCalendar Naptár Inicializálás
-    // ================================
-
     function extractTime(isoTime) {
         const date = new Date(isoTime);
         const hours = date.getUTCHours().toString().padStart(2, "0");
@@ -175,9 +160,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             const foglalasok = await res.json();
 
             return foglalasok.map(f => {
-                const ido = extractTime(f.ido);
-                const datum = f.datum.split("T")[0];
-                const start = `${datum}T${ido}`;
+                const idoStr = typeof f.ido === "string" ? f.ido : "00:00:00";
+                const datum = f.datum.split("T")[0]; // csak "YYYY-MM-DD"
+                const start = `${datum}T${idoStr.slice(0,5)}:00`; // pl. 2025-04-26T09:00:00
                 return {
                     title: f.oktato || "Foglalás",
                     start,

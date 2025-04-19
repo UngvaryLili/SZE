@@ -157,6 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         allDaySlot: false,
         height: "auto",
         locale: "hu",
+        timeZone: "local", //időzóna eltolás az admin naptárnál
         headerToolbar: {
             left: "prev,next today",
             center: "title",
