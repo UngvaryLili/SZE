@@ -219,13 +219,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const foglaltak = await lekerFoglalasokNaptarhoz(userEmail);
         const szabadok = await lekerElerhetoIdopontok();
 
-        const foglaltStartok = new Set(foglaltak.map(e => e.start));
+        const foglaltKulcsok = new Set(foglaltak.map(e => `${e.start}-${e.title}`));
         const osszes = [...foglaltak];
         szabadok.forEach(szabad => {
-            if (!foglaltStartok.has(szabad.start)) {
+            const kulcs = `${szabad.start}-${szabad.title}`;
+            if (!foglaltKulcsok.has(kulcs)) {
                 osszes.push(szabad);
             }
         });
+
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'timeGridWeek',
