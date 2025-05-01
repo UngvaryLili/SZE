@@ -719,3 +719,42 @@ p {
     padding: 2px 6px;
     font-size: 12px;
 }
+
+
+/*fooldal*/
+/* Dropdown menü */
+.nav-right ul li.dropdown {
+    position: relative;
+  }
+  
+  .nav-right ul li .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #333;
+    padding: 10px 0;
+    border-radius: 5px;
+    min-width: 160px;
+    z-index: 999;
+  }
+  
+  .nav-right ul li .dropdown-menu li {
+    display: block;
+  }
+  
+  .nav-right ul li .dropdown-menu li a {
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  .nav-right ul li .dropdown-menu li a:hover {
+    background-color: #444;
+  }
+  
+  .nav-right ul li.dropdown:hover .dropdown-menu {
+    display: block;
+  }
+  
