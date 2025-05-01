@@ -748,5 +748,25 @@ router.get("/osszes-foglalas", async (req, res) => {
 module.exports = router;
 
 
+// ================= Tanulok összes foglalas =================
+router.get("/osszes-elerheto-idopont", async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
 
+        const result = await pool.request().query(`
+            SELECT 
+                e.datum,
+                CAST(e.ido AS varchar) AS ido,
+                o.nev AS oktato,
+                e.oktatokId
+            FROM ElérhetőIdopontok e
+            LEFT JOIN oktatok o ON e.oktatokId = o.oktatokId
+        `);
+
+        res.json(result.recordset);
+    } catch (err) {
+        console.error("Elérhető időpontok lekérése (összes) hiba:", err);
+        res.status(500).send("Szerverhiba.");
+    }
+});
 

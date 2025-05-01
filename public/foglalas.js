@@ -84,14 +84,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             const foglaltRes = await fetch(`/foglalt-idopontok?oktatokId=${selectedOktatoId}&datum=${datum.value}`);
             const foglaltRaw = await foglaltRes.json();
 
-
             const foglaltIdopontok = foglaltRaw.map(idopont => {
                 const d = new Date(idopont);
                 return d.toISOString().substring(11, 16);
             });
-           
-
-            
 
             ido.innerHTML = `<option value="">-- Válassz időpontot --</option>`;
             racs.innerHTML = "";
@@ -151,52 +147,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    function extractTime(ido) {
-        if (typeof ido === "string") {
-            return ido.slice(0, 5);
-        } else if (typeof ido === "object" && ido !== null) {
-            const hours = ido.hours?.toString().padStart(2, "0") || "00";
-            const minutes = ido.minutes?.toString().padStart(2, "0") || "00";
-            return `${hours}:${minutes}`;
-        }
-        return "00:00";
-    }
-
-    async function lekerFoglalasokNaptarhoz(userEmail) {
-        try {
-            const res = await fetch("/osszes-foglalas");
-            if (!res.ok) throw new Error("Nem sikerült foglalásokat lekérni.");
-            const foglalasok = await res.json();
-
-            return foglalasok.map(f => {
-                /*const datumObj = new Date(f.datum); //nem jó a dátum, mert időzóna eltolás, stringé alakítjuk
-                const ido = extractTime(f.ido);
-
-                const start = `${datumObj.getFullYear()}-${(datumObj.getMonth() + 1).toString().padStart(2, "0")}-${datumObj.getDate().toString().padStart(2, "0")}T${ido}:00`;
-                */
-                const datum = f.datum.split("T")[0]; // pl. "2025-04-23"
-                const ido = f.ido.split("T")[1].substring(0, 5); // pl. "15:00"
-                const start = `${datum}T${ido}:00`;
-                
-
-
-
-
-
-                return {
-                    title: f.oktato || "Foglalás",
-                    start,
-                    end: start,
-                    color: f.email === userEmail ? "#007bff" : "#dc3545",
-                    sajat: f.email === userEmail
-                };
-            });
-        } catch (err) {
-            console.error("Naptár foglalás hiba:", err);
-            return [];
-        }
-    }
-
     async function getUserEmail() {
         try {
             const res = await fetch("/profiladatok");
@@ -209,10 +159,73 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    async function lekerFoglalasokNaptarhoz(userEmail) {
+        try {
+            const res = await fetch("/osszes-foglalas");
+            if (!res.ok) throw new Error("Nem sikerült foglalásokat lekérni.");
+            const foglalasok = await res.json();
+
+            return foglalasok.map(f => {
+                const datum = f.datum.split("T")[0];
+                const ido = f.ido.split("T")[1].substring(0, 5);
+                const start = `${datum}T${ido}:00`;
+
+                return {
+                    title: f.oktato || "Foglalás",
+                    start,
+                    end: start,
+                    color: f.email === userEmail ? "#007bff" : "#dc3545",
+                    sajat: f.email === userEmail,
+                    foglalt: true
+                };
+            });
+        } catch (err) {
+            console.error("Naptár foglalás hiba:", err);
+            return [];
+        }
+    }
+
+    async function lekerElerhetoIdopontok() {
+        try {
+            const res = await fetch("/osszes-elerheto-idopont");
+            if (!res.ok) throw new Error("Nem sikerült a szabad időpontokat lekérni.");
+            const idopontok = await res.json();
+
+            return idopontok.map(f => {
+                const datum = f.datum.split("T")[0];
+                const ido = f.ido.split(":").slice(0, 2).join(":");
+                const start = `${datum}T${ido}:00`;
+
+                return {
+                    title: f.oktato || "Szabad időpont",
+                    start,
+                    end: start,
+                    color: "#28a745",
+                    foglalt: false,
+                    datum,
+                    ido,
+                    oktatokId: f.oktatokId
+                };
+            });
+        } catch (err) {
+            console.error("Szabad időpont hiba:", err);
+            return [];
+        }
+    }
+
     async function initNaptar() {
         const calendarEl = document.getElementById("naptar");
         const userEmail = await getUserEmail();
-        const events = await lekerFoglalasokNaptarhoz(userEmail);
+        const foglaltak = await lekerFoglalasokNaptarhoz(userEmail);
+        const szabadok = await lekerElerhetoIdopontok();
+
+        const foglaltStartok = new Set(foglaltak.map(e => e.start));
+        const osszes = [...foglaltak];
+        szabadok.forEach(szabad => {
+            if (!foglaltStartok.has(szabad.start)) {
+                osszes.push(szabad);
+            }
+        });
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'timeGridWeek',
@@ -228,10 +241,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 center: 'title',
                 right: ''
             },
-            events: events,
+            events: osszes,
             eventClick: function (info) {
-                const sajat = info.event.extendedProps.sajat;
-                alert(sajat ? "Ez a saját foglalásod!" : "Ez az időpont már foglalt.");
+                const sajat = info.event.extendedProps?.sajat;
+                const foglalt = info.event.extendedProps?.foglalt;
+
+                if (sajat) {
+                    alert("Ez a saját foglalásod!");
+                } else if (foglalt) {
+                    alert("Ez az időpont már foglalt.");
+                } else {
+                    alert("Ez egy szabad időpont – válaszd ki az űrlapon, ha szeretnél foglalni.");
+                }
             }
         });
 

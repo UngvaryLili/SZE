@@ -664,6 +664,8 @@ p {
     width: 400px;  /* vagy pl. 800px */
     margin: 0 auto;
     overflow: hidden;
+
+   
   }
   
   #naptar {
@@ -756,5 +758,56 @@ p {
   
   .nav-right ul li.dropdown:hover .dropdown-menu {
     display: block;
+  }
+  
+  .jelmagyarazat {
+    margin-top: 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 300px;
+  text-align: left;
+  margin-left: 290px;
+  }
+  
+  .jelmagyarazat h3 {
+    margin-top: 0;
+    text-align: center;
+    color: #333;
+  }
+  
+  .jelmagyarazat ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .jelmagyarazat li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1em;
+    margin-bottom: 8px;
+  }
+  
+  .jel {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .szin-kek {
+    background-color: #007bff;
+  }
+  
+  .szin-piros {
+    background-color: #dc3545;
+  }
+  
+  .szin-zold {
+    background-color: #28a745;
   }
   
