@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("email").value;
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
+        const szuloEmail = document.getElementById("szuloEmail").value; // új sor
 
         try {
             const res = await fetch("/reg", {
@@ -14,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email, username, password })
+                body: JSON.stringify({ email, username, password, szuloEmail }) // új mező hozzáadva
             });
 
             if (res.redirected) {

@@ -18,7 +18,8 @@ const dbConfig = {
 
 // ================= t.REGISZTRÁCIÓ =================
 router.post("/reg", async (req, res) => {
-    const { email, username, password } = req.body;
+    const { email, username, password, szuloEmail } = req.body;
+
     try {
         const pool = await sql.connect(dbConfig);
 
@@ -45,7 +46,11 @@ router.post("/reg", async (req, res) => {
             .input("email", sql.NVarChar, email)
             .input("username", sql.NVarChar, username)
             .input("password_hash", sql.NVarChar, hashedPassword)
-            .query("INSERT INTO User_Name (id, email, username, password_hash) VALUES (@id, @email, @username, @password_hash)");
+            .input("szuloEmail", sql.NVarChar, szuloEmail || null)
+            .query(`
+                INSERT INTO User_Name (id, email, username, password_hash, szuloEmail)
+                VALUES (@id, @email, @username, @password_hash, @szuloEmail)
+            `);
 
         req.session.email = email;
         res.redirect("/foglalas.html");
@@ -54,6 +59,7 @@ router.post("/reg", async (req, res) => {
         res.status(500).send("Szerverhiba.");
     }
 });
+
 
 // ================= t.BEJELENTKEZÉS =================
 router.post("/sign", async (req, res) => {
@@ -530,6 +536,8 @@ router.get("/logout", (req, res) => {
 });
 
 // ============== T.FOGLALÁS ==============
+const nodemailer = require("nodemailer"); // csak egyszer kell a fájl tetején
+
 router.post("/foglalas", async (req, res) => {
     const email = req.session.email;
     const { oktatokId, datum, ido, megjegyzes } = req.body;
@@ -537,15 +545,19 @@ router.post("/foglalas", async (req, res) => {
 
     try {
         const pool = await sql.connect(dbConfig);
+
+        // Felhasználó azonosítása
         const userResult = await pool.request()
             .input("email", sql.NVarChar, email)
-            .query("SELECT id FROM User_Name WHERE email = @email");
-        
+            .query("SELECT id, szuloEmail FROM User_Name WHERE email = @email");
+
         if (userResult.recordset.length === 0)
             return res.status(400).send("Hiba: regisztrált felhasználó nem található.");
 
         const tanulokId = userResult.recordset[0].id;
+        const szuloEmail = userResult.recordset[0].szuloEmail;
 
+        // Foglalás mentése
         await pool.request()
             .input("tanulokId", sql.Int, tanulokId)
             .input("oktatokId", sql.TinyInt, parseInt(oktatokId))
@@ -558,6 +570,30 @@ router.post("/foglalas", async (req, res) => {
                 VALUES (@tanulokId, @oktatokId, @datum, @ido, @megjegyzes, @email)
             `);
 
+        // Szülő értesítése (ha van megadva)
+        if (szuloEmail) {
+            const transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                  user: process.env.EMAIL_USER,
+                  pass: process.env.EMAIL_PASS
+                },
+                tls: {
+                  rejectUnauthorized: false
+                }
+              });
+              
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: szuloEmail,
+                subject: "Új magánóra foglalás",
+                text: `Kedves Szülő!\n\nGyermeke (${email}) új magánórát foglalt:\n\nDátum: ${datum}\nIdőpont: ${ido}\nOktató azonosító: ${oktatokId}\n\nÜdvözlettel:\nMagántanár rendszer`
+            };
+
+            await transporter.sendMail(mailOptions);
+        }
+
         res.redirect("/foglalasaim.html");
     } catch (err) {
         console.error("Foglalási hiba:", err);
@@ -565,7 +601,10 @@ router.post("/foglalas", async (req, res) => {
     }
 });
 
+
 // ==============t. LEMONDÁS ==============
+
+
 router.post("/cancel", async (req, res) => {
     const { esemenyId } = req.body;
     const email = req.session.email;
@@ -573,10 +612,12 @@ router.post("/cancel", async (req, res) => {
 
     try {
         const pool = await sql.connect(dbConfig);
+
+        // Lekérjük az eseményt a törléshez és e-mail küldéshez
         const reservationResult = await pool.request()
             .input("esemenyId", sql.Int, parseInt(esemenyId))
             .input("email", sql.NVarChar, email)
-            .query("SELECT datum FROM esemeny WHERE esemenyId = @esemenyId AND email = @email");
+            .query("SELECT datum, ido FROM esemeny WHERE esemenyId = @esemenyId AND email = @email");
 
         if (reservationResult.recordset.length === 0)
             return res.status(400).send("Foglalás nem található.");
@@ -591,16 +632,68 @@ router.post("/cancel", async (req, res) => {
         if (diffDays < 2)
             return res.status(400).send("Az időpontot megelőző nap már nem tudsz lemondani.");
 
+        // Előbb törlés
         await pool.request()
             .input("esemenyId", sql.Int, parseInt(esemenyId))
             .query("DELETE FROM esemeny WHERE esemenyId = @esemenyId");
 
         res.send("Foglalás sikeresen lemondva.");
+
+        // Külön blokkban: szülő értesítése
+        // Külön blokkban: szülő értesítése
+        try {
+            const szuloResult = await pool.request()
+                .input("email", sql.NVarChar, email)
+                .query("SELECT szuloEmail FROM User_Name WHERE email = @email");
+
+            const szuloEmail = szuloResult.recordset[0]?.szuloEmail;
+
+            if (szuloEmail) {
+                const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASS
+                    },
+                    tls: {
+                        rejectUnauthorized: false
+                    }
+                });
+
+                let idoFormazva = "Ismeretlen időpont";
+
+                
+                if (reservation.ido instanceof Date) {
+                    const ora = reservation.ido.getUTCHours().toString().padStart(2, "0");
+                    const perc = reservation.ido.getUTCMinutes().toString().padStart(2, "0");
+                    idoFormazva = `${ora}:${perc}`;
+                }
+
+
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: szuloEmail,
+                    subject: "Lemondott magánóra",
+                    text: `Kedves Szülő!\n\nGyermeke (${email}) lemondta az alábbi magánórát:\nDátum: ${reservation.datum.toISOString().split("T")[0]}\nIdőpont: ${idoFormazva}\n\nÜdvözlettel:\nMagántanár rendszer`
+
+
+
+                };
+                
+
+                await transporter.sendMail(mailOptions);
+            }
+        } catch (emailErr) {
+            console.error("Szülői e-mail küldési hiba (lemondásnál):", emailErr);
+        }
+
+
     } catch (err) {
         console.error("Lemondási hiba:", err);
         res.status(500).send("Szerverhiba.");
     }
 });
+
 
 // ============== t. FOGLALÁSAIM ==============
 router.get("/foglalasaim", async (req, res) => {
