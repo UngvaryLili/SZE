@@ -511,22 +511,6 @@ router.post("/admin-idopont-torles", async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ================= KIJELENTKEZÉS =================
 router.get("/logout", (req, res) => {
     req.session.destroy(err => {
@@ -557,6 +541,8 @@ router.post("/foglalas", async (req, res) => {
         const tanulokId = userResult.recordset[0].id;
         const szuloEmail = userResult.recordset[0].szuloEmail;
 
+        const szamlaEmail = szuloEmail || email; 
+
         // Foglalás mentése
         await pool.request()
             .input("tanulokId", sql.Int, tanulokId)
@@ -565,9 +551,10 @@ router.post("/foglalas", async (req, res) => {
             .input("ido", sql.NVarChar, ido)
             .input("megjegyzes", sql.NVarChar, megjegyzes || "")
             .input("email", sql.NVarChar, email)
+            .input("szamlaEmail", sql.NVarChar, szamlaEmail)
             .query(`
-                INSERT INTO esemeny (tanulokId, oktatokId, datum, ido, megjegyzes, email)
-                VALUES (@tanulokId, @oktatokId, @datum, @ido, @megjegyzes, @email)
+                INSERT INTO esemeny (tanulokId, oktatokId, datum, ido, megjegyzes, email, Számlafizető_email)
+                VALUES (@tanulokId, @oktatokId, @datum, @ido, @megjegyzes, @email, @szamlaEmail)
             `);
 
         // Szülő értesítése (ha van megadva)
